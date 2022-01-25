@@ -65,32 +65,38 @@ router.get("/topclients", async (req, res) => {
         from: "agencies",
         localField: "agencyId",
         foreignField: "agencyId",
-        as: "topClient",
-      },
-    },
-    {
-      $project: {
-        name: 1.0,
-        totalBill: 1.0,
-        "topClient.name": 1.0,
+        as: "agency",
       },
     },
     {
       $group: {
-        _id: "$topClient.name",
-        maxBill: {
+        _id: "$agency.name",
+        doc: {
+          $first: "$$ROOT",
+        },
+        TotalBill: {
           $max: "$totalBill",
         },
       },
     },
     {
       $sort: {
-        maxBill: -1,
+        TotalBill: -1,
       },
     },
   ]);
 
-  res.status(200).json(data);
+  const res1 = [];
+
+  for (var i = 0; i < data.length; i++) {
+    const agencyName = data[i]._id;
+    const totalBill = data[i].TotalBill;
+    const clientname = data[i].doc.name;
+
+    res1.push(agencyName, totalBill, clientname);
+  }
+
+  res.status(200).json(res1);
 });
 
 module.exports = router;
